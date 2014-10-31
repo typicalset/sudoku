@@ -5,6 +5,8 @@ class Sudoku:
 	BOX_SIZE = 3
 	NUM_BOXES = 9
 
+	T = 0.3
+
 
 	def __init__(self, game_file='sample1.csv'):
 		self.board = np.loadtxt(game_file,delimiter=',',dtype=int)
@@ -38,17 +40,33 @@ class Sudoku:
 		for i in np.arange(0, self.NUM_BOXES):
 			self.fill_box(i)
 
+	def count_duplicates(self, board):
+		num_duplicates = 0
+		for i in np.arange(0,self.NUM_BOXES):
+			num_duplicates += 2*self.NUM_BOXES - len(np.unique(board[i,:])) - len(np.unique(board[:,i]))
+		return num_duplicates
+
+	def energy(self, board):
+		return 2*self.NUM_BOXES*self.NUM_BOXES - count_duplicates(board)
 
 	def pick_random_box(self):
 		return np.random.randint(0, self.NUM_BOXES)
 
+	def swap_squares(self, square1, square2):
+		self.board[square1], self.board[square2] = self.board[square2], self.board[square1]
 
-	def swap_squares(self, box):
+	def propose_swap(self, box):
 		x,y = self.box2coord(box)
 		swappable_x, swappable_y = np.where(self.board_initial[x:x+self.BOX_SIZE,y:y+self.BOX_SIZE])
 
 		# randomly pick two squares to swap
+		i,j = tuple(np.random.choice(len(swappable_x), 2, replace=False))
+
+		square1 = swappable_x[i], swappable_y[i]
+		square2 = swappable_x[j], swappable_y[j]
+
 		# make the swap
+		return square1, square2
 
 
 	# quick and dirty method for checking completion
@@ -57,6 +75,11 @@ class Sudoku:
 
 	def solve(self):
 		self.fill_initial()
+
+		nitr = 100
+
+		for i in np.arange(0,nitr):
+			
 
 
 
