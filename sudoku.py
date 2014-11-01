@@ -1,12 +1,12 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 class Sudoku:
 
 	BOX_SIZE = 3
 	NUM_BOXES = 9
 
-	T = 0.3
-
+	T = 0.1
 
 	def __init__(self, game_file='sample1.csv'):
 		self.board = np.loadtxt(game_file,delimiter=',',dtype=int)
@@ -35,7 +35,6 @@ class Sudoku:
 
 		self.board[x+missing_x, y+missing_y] = missing_numbers
 
-
 	def fill_initial(self):
 		for i in np.arange(0, self.NUM_BOXES):
 			self.fill_box(i)
@@ -46,8 +45,9 @@ class Sudoku:
 			num_duplicates += 2*self.NUM_BOXES - len(np.unique(board[i,:])) - len(np.unique(board[:,i]))
 		return num_duplicates
 
-	def energy(self, board):
-		return 2*self.NUM_BOXES*self.NUM_BOXES - count_duplicates(board)
+	def compute_energy(self, board):
+		#return 2*self.NUM_BOXES*self.NUM_BOXES - self.count_duplicates(board)
+		return self.count_duplicates(board)
 
 	def pick_random_box(self):
 		return np.random.randint(0, self.NUM_BOXES)
@@ -62,10 +62,9 @@ class Sudoku:
 		# randomly pick two squares to swap
 		i,j = tuple(np.random.choice(len(swappable_x), 2, replace=False))
 
-		square1 = swappable_x[i], swappable_y[i]
-		square2 = swappable_x[j], swappable_y[j]
+		square1 = x+swappable_x[i], y+swappable_y[i]
+		square2 = x+swappable_x[j], y+swappable_y[j]
 
-		# make the swap
 		return square1, square2
 
 
@@ -73,13 +72,33 @@ class Sudoku:
 	def is_done(self):
 		return (np.sum(self.board, 0) == np.sum(self.board,1)).all()
 
-	def solve(self):
+	def solve(self, nitr=100):
 		self.fill_initial()
 
-		nitr = 100
+
+		E_hist = []
 
 		for i in np.arange(0,nitr):
-			
+			E = self.compute_energy(self.board)
+			E_hist.append(E)
+
+			box = self.pick_random_box()
+			square1, square2 = self.propose_swap(box)
+			self.swap_squares(square1, square2)
+			E_proposal = self.compute_energy(self.board)
+
+			if E_proposal >= E:
+				if np.exp(-(E_proposal-E)/self.T) < np.random.random():
+					self.swap_squares(square1, square2)
+				else:
+					pass # accept proposal
+			else:
+				pass # accept proposal
+
+		plt.plot(E_hist)
+		return E_hist
+
+
 
 
 
